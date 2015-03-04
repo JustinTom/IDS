@@ -287,6 +287,16 @@ class MyHandler(FileSystemEventHandler):
                         incorrectAttempts.append(user)
                         print "%s's failed login attempts time stamps (%d total): %s " % (user.ip, len(user.timeStampArray), user.timeStampArray)
 
+            #Empty the time stamp array if it already exists (essentially resetting the number of attempts the user from that IP can do)
+            elif 'Accepted password for' in lastLine: 
+                ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}', lastLine)
+                #timeStamp = re.findall(r'\d{2}:\d{2}:\d{2}', lastLine)
+                
+                if incorrectAttempts:
+                    for user in incorrectAttempts:  
+                        if user.ip == ip[0]:
+                            timeStampArray = []
+
 if __name__ == "__main__":
     numberOfAttempts, timeScan, banTime = initializeParameters()
     cronJob(numberOfAttempts, timeScan, banTime)
