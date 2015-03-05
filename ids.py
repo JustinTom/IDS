@@ -235,8 +235,9 @@ class MyHandler(FileSystemEventHandler):
             fileHandle = open ( '/var/log/secure')
             lineList = fileHandle.readlines()
             lastLine = lineList[len(lineList)-1]
+            secondLastLine = lineList[len(lineList)-2]
 
-            if 'Failed password for' in lastLine
+            if "Failed password for" in lastLine:
                 timeStampArray = []  
                 ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}', lastLine )
                 timeStamp = re.findall(r'\d{2}:\d{2}:\d{2}', lastLine)                          
@@ -287,6 +288,17 @@ class MyHandler(FileSystemEventHandler):
                         incorrectAttempts.append(user)
                         print "%s's failed login attempts time stamps (%d total): %s " % (user.ip, len(user.timeStampArray), user.timeStampArray)
 
+            #Empty the time stamp array if it already exists (essentially resetting the number of attempts the user from that IP can do)
+            elif ("Accepted password for" in lastLine) or ("Accepted password for" in secondLastLine): 
+                ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}', secondLastLine)
+                #timeStamp = re.findall(r'\d{2}:\d{2}:\d{2}', lastLine)
+                #print "Successful Login From: %s" % (ip)
+                for user in incorrectAttempts:  
+                    if user.ip == ip[0]:
+                        user.timeStampArray = []
+
+
+
 if __name__ == "__main__":
     numberOfAttempts, timeScan, banTime = initializeParameters()
     cronJob(numberOfAttempts, timeScan, banTime)
@@ -298,7 +310,7 @@ if __name__ == "__main__":
     bannedIps = []
     try:
         while True:
-            time.sleep(0.1)
+            time.sleep(0.01)
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
